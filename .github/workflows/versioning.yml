@@ -1,0 +1,66 @@
+name: Create Version Tag
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create_version_tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get the current version
+        id: get_version
+        run: |
+          if git describe --tags --abbrev=0; then
+            echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          else
+            echo "version=v0.0.0" >> $GITHUB_ENV
+          fi
+
+      - name: Determine version bump
+        id: determine_bump
+        run: |
+          version=${{ env.version }}
+          echo "Current version: $version"
+          bump="patch"
+          if git log -1 --pretty=%B | grep -qE '^(feat|feature|minor):'; then
+            bump="minor"
+          elif git log -1 --pretty=%B | grep -qE '^(BREAKING CHANGE|major):'; then
+            bump="major"
+          fi
+          echo "bump=$bump" >> $GITHUB_ENV
+
+      - name: Increment version
+        id: increment_version
+        run: |
+          version=${{ env.version }}
+          bump=${{ env.bump }}
+          echo "Current version: $version"
+          IFS='.' read -r -a parts <<< "${version#v}"
+          major=${parts[0]}
+          minor=${parts[1]}
+          patch=${parts[2]}
+          if [ "$bump" = "major" ]; then
+            new_version="v$((major + 1)).0.0"
+          elif [ "$bump" = "minor" ]; then
+            new_version="v$major.$((minor + 1)).0"
+          else
+            new_version="v$major.$minor.$((patch + 1))"
+          fi
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
+      - name: Create new version tag
+        run: |
+          new_version=${{ env.new_version }}
+          git tag $new_version
+          git push origin $new_version
