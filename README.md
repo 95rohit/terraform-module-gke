@@ -1,7 +1,7 @@
 # terraform-module-gke
 Terraform code for deploying GKE clusters.
 
-This Terraform module creates a Google Kubernetes Engine (GKE) cluster with various configurable options. It allows you to customize the cluster's settings, including node pools, network configurations, and Kubernetes features.
+This Terraform module creates a Google Kubernetes Engine (GKE) cluster with various configurable options. It allows user to customize the cluster's settings, including node pools, network configurations, and Kubernetes features.
 
 ## Setup
 
@@ -24,8 +24,8 @@ To deploy this module and set up a Kubernetes cluster, follow the instructions b
    - Ensure you have billing set up for the project.
 
 4. **Configure Authentication**:
-   - Either provide a service account `credentials` with the necessary permissions to create VPC, routes, and GKE. Check module usage to understand how to provide credentials.
-   - Or authenticate with Google Cloud using a service account with the necessary permissions:
+   - You can provide a service account `credentials` with the necessary permissions to create VPC, routes, and GKE. Check module usage to understand how to provide credentials.
+   - Authenticate with Google Cloud using a service account with the necessary permissions:
      ```sh
      gcloud auth application-default login
      ```
@@ -47,7 +47,6 @@ To deploy this module and set up a Kubernetes cluster, follow the instructions b
    - Either apply the Terraform configuration using environment variables:
      ```sh
      terraform apply
-     terraform apply -var-file=$var_file.tfvars
      ```
    - Or apply the Terraform configuration using `.tfvars`:
      ```sh
@@ -66,7 +65,7 @@ To deploy this module and set up a Kubernetes cluster, follow the instructions b
 
 ```hcl
 module "gke" {
-  source                          = "git@github.com:95rohit/terraform-module-gke?ref=${MODULE_VERSION}"
+  source                          = "git::https://github.com/95rohit/terraform-module-gke?ref=${MODULE_VERSION}"
   project_id                      = var.project_id
   cluster_name                    = var.cluster_name
   region                          = var.region
