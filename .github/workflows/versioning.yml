@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history and tags
 
       - name: Set up Git
         run: |
@@ -21,7 +23,7 @@ jobs:
       - name: Get the current version
         id: get_version
         run: |
-          if git describe --tags --abbrev=0; then
+          if git describe --tags --abbrev=0 2>/dev/null; then
             echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
           else
             echo "version=v0.0.0" >> $GITHUB_ENV
@@ -32,11 +34,20 @@ jobs:
         run: |
           version=${{ env.version }}
           echo "Current version: $version"
+          
+          # Check commit message for version bump indicators
+          commit_msg=$(git log -1 --pretty=%B)
+          echo "Commit message: $commit_msg"
+          
           bump="patch"
-          if git log -1 --pretty=%B | grep -qE '^(feat|feature|minor):'; then
+          if echo "$commit_msg" | grep -qE '^(feat|feature|minor):'; then
             bump="minor"
-          elif git log -1 --pretty=%B | grep -qE '^(BREAKING CHANGE|major):'; then
+            echo "Detected minor version bump"
+          elif echo "$commit_msg" | grep -qE '^(BREAKING CHANGE|major):'; then
             bump="major"
+            echo "Detected major version bump"
+          else
+            echo "Detected patch version bump"
           fi
           echo "bump=$bump" >> $GITHUB_ENV
 
@@ -46,10 +57,15 @@ jobs:
           version=${{ env.version }}
           bump=${{ env.bump }}
           echo "Current version: $version"
-          IFS='.' read -r -a parts <<< "${version#v}"
+          
+          # Extract version parts
+          version_no_v="${version#v}"
+          IFS='.' read -r -a parts <<< "$version_no_v"
           major=${parts[0]}
           minor=${parts[1]}
           patch=${parts[2]}
+          
+          # Calculate new version
           if [ "$bump" = "major" ]; then
             new_version="v$((major + 1)).0.0"
           elif [ "$bump" = "minor" ]; then
@@ -57,10 +73,18 @@ jobs:
           else
             new_version="v$major.$minor.$((patch + 1))"
           fi
+          echo "New version will be: $new_version"
           echo "new_version=$new_version" >> $GITHUB_ENV
 
       - name: Create new version tag
         run: |
           new_version=${{ env.new_version }}
-          git tag $new_version
-          git push origin $new_version
+          
+          # Check if tag already exists
+          if ! git ls-remote --tags origin refs/tags/$new_version | grep -q $new_version; then
+            echo "Creating new tag: $new_version"
+            git tag $new_version
+            git push origin $new_version
+          else
+            echo "Tag $new_version already exists. Skipping tag creation."
+          fi
