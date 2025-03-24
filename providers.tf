@@ -1,6 +1,7 @@
 provider "google" {
   project     = var.project_id
   region      = local.region
+  credentials = var.credentials != "" ? file(var.credentials) : null
 }
 
 terraform {

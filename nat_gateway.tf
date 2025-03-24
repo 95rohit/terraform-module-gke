@@ -19,12 +19,12 @@ resource "google_compute_router" "router" {
 
 # Create a NAT Gateway using the Cloud Router
 resource "google_compute_router_nat" "nat_gateway" {
-  name                               = "${local.cluster_name}-nat"
-  router                             = google_compute_router.router.name
-  region                             = var.region
+  name   = "${local.cluster_name}-nat"
+  router = google_compute_router.router.name
+  region = var.region
 
-  nat_ip_allocate_option             = "MANUAL_ONLY"
-  nat_ips                            = [google_compute_address.nat_ip.self_link]
+  nat_ip_allocate_option = "MANUAL_ONLY"
+  nat_ips                = [google_compute_address.nat_ip.self_link]
 
   source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
 

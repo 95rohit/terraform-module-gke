@@ -6,7 +6,7 @@ resource "google_compute_subnetwork" "public_subnet" {
   ip_cidr_range            = var.public_subnet_cidr
   region                   = var.region
   network                  = google_compute_network.vpc.id
-  private_ip_google_access = false # Public subnet does not need private Google access.
+  private_ip_google_access = false       # Public subnet does not need private Google access.
   stack_type               = "IPV4_ONLY" # IPV4 is enough for minimal viable GCP/GKE
 }
 
