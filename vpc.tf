@@ -1,6 +1,6 @@
 # Create a VPC network
 resource "google_compute_network" "vpc" {
-  name                            = var.cluster_name
+  name                            = "${var.cluster_name}-vpc"
   routing_mode                    = var.routing_mode
   auto_create_subnetworks         = false
   delete_default_routes_on_create = true
